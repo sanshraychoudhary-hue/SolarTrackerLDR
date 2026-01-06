@@ -1,0 +1,85 @@
+#include <Servo.h>
+
+// ---------------- SERVO OBJECTS ----------------
+Servo horizontal;   // Horizontal Servo Motor
+Servo vertical;     // Vertical Servo Motor
+
+// ---------------- SERVO INITIAL POSITIONS & LIMITS ----------------
+int servohori = 180;                 // Initial horizontal position
+int servohoriLimitHigh = 175;
+int servohoriLimitLow = 5;
+
+int servovert = 45;                  // Initial vertical position
+int servovertLimitHigh = 100;
+int servovertLimitLow = 1;
+
+// ---------------- LDR PIN CONNECTIONS ----------------
+// Top-left, Top-right, Bottom-left, Bottom-right
+int ldrlt = A2;
+int ldrrt = A1;
+int ldrld = A3;
+int ldrrd = A0;
+
+// ---------------- SETUP ----------------
+void setup() {
+  horizontal.attach(2);   // Horizontal servo pin
+  vertical.attach(13);    // Vertical servo pin
+
+  horizontal.write(servohori);
+  vertical.write(servovert);
+
+  delay(2500); // Allow servos to stabilize
+}
+
+// ---------------- MAIN LOOP ----------------
+void loop() {
+
+  // Read LDR values
+  int lt = analogRead(ldrlt);
+  int rt = analogRead(ldrrt);
+  int ld = analogRead(ldrld);
+  int rd = analogRead(ldrrd);
+
+  int dtime = 10;  // Delay between movements
+  int tol = 90;    // Light difference tolerance
+
+  // Calculate average light values
+  int avt = (lt + rt) / 2;   // Top average
+  int avd = (ld + rd) / 2;   // Bottom average
+  int avl = (lt + ld) / 2;   // Left average
+  int avr = (rt + rd) / 2;   // Right average
+
+  // Calculate light differences
+  int dvert = avt - avd;     // Vertical difference
+  int dhoriz = avl - avr;    // Horizontal difference
+
+  // ---------------- VERTICAL MOVEMENT ----------------
+  if (abs(dvert) > tol) {
+    if (avt > avd) {
+      servovert++;
+      if (servovert > servovertLimitHigh)
+        servovert = servovertLimitHigh;
+    } else {
+      servovert--;
+      if (servovert < servovertLimitLow)
+        servovert = servovertLimitLow;
+    }
+    vertical.write(servovert);
+  }
+
+  // ---------------- HORIZONTAL MOVEMENT ----------------
+  if (abs(dhoriz) > tol) {
+    if (avl > avr) {
+      servohori--;
+      if (servohori < servohoriLimitLow)
+        servohori = servohoriLimitLow;
+    } else {
+      servohori++;
+      if (servohori > servohoriLimitHigh)
+        servohori = servohoriLimitHigh;
+    }
+    horizontal.write(servohori);
+  }
+
+  delay(dtime);
+}
